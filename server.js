@@ -121,15 +121,16 @@ app.post("/remove-metadata", async (req, res) => {
         const userId = req.body.userId;
         const tokens = await storage.getDiscordTokens(userId);
 
-        if (!tokens) {
-            console.error(`No tokens found for user ${userId}`);
-            return res.sendStatus(404);
-        }
-
         const user = await getUser(userId);
         if (!user) {
             console.error(`User ${userId} not found in database`);
             return res.sendStatus(404);
+        }
+
+        if (!tokens) {
+            console.warn(
+                `No tokens found for user ${userId}. Skipping Discord metadata removal.`
+            );
         }
 
         const metadata = {
@@ -140,8 +141,10 @@ app.post("/remove-metadata", async (req, res) => {
             is_contributor: false,
         };
 
-        console.log(`📡 Removing metadata for ${userId}`);
-        await discord.pushMetadata(userId, tokens, metadata);
+        if (tokens) {
+            console.log(`📡 Removing metadata for ${userId}`);
+            await discord.pushMetadata(userId, tokens, metadata);
+        }
 
         console.log(`🗑️ Attempting to remove user from database: ${userId}`);
         const result = await db.collection("users").deleteOne({
