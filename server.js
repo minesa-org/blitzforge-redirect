@@ -123,8 +123,13 @@ app.post("/remove-metadata", async (req, res) => {
 
         const user = await getUser(userId);
         if (!user) {
-            console.error(`User ${userId} not found in database`);
-            return res.sendStatus(404);
+            console.warn(`User ${userId} not found in database`);
+        }
+
+        if (!tokens) {
+            console.warn(
+                `No tokens found for user ${userId}. Skipping Discord metadata removal.`
+            );
         }
 
         if (!tokens) {
